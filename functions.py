@@ -2,6 +2,7 @@ import requests
 import difflib
 import time
 
+
 # История платежей - последние и следующие n платежей
 # Отправляем запрос в киви, получаем json-ответ
 def payment_history_last(my_login, api_access_token, rows_num, next_TxnId, next_TxnDate):
@@ -37,9 +38,28 @@ def balance(my_login, api_access_token):
     b = s.get('https://edge.qiwi.com/funding-sources/v2/persons/' + my_login + '/accounts')
     return b.json()
 
+
 # Сравниваем две строки и получаем степень сходства от 0 до 1
 def similarity(s1, s2):
     normalazed1 = s1.lower()
     normalazed2 = s2.lower()
     matcher = difflib.SequenceMatcher(None, normalazed1, normalazed2)
     return matcher.ratio()
+
+
+def fibonacci(x):
+    sequence = []
+    result = 0
+    n = 1
+
+    for i in range(x):
+        result = result + n
+        n = result - n
+        sequence.append(result)
+
+    golden_ratio = sequence[-1] / sequence[-2]
+
+    return sequence, golden_ratio
+
+
+

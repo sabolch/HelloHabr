@@ -9,7 +9,7 @@ import json
 
 # Подтягиваем токен бота и все необходимое для получение средств за пиццу
 from config import token, my_login, api_access_token
-from functions import payment_history_last, similarity, balance, send_mobile
+from functions import payment_history_last, similarity, balance, send_mobile, fibonacci
 from telebot import types
 
 # Создание бота
@@ -17,6 +17,7 @@ bot = telebot.TeleBot(token)
 
 say_ban = ["бан", "забанить", "!бан", "мут", "!мут", "!ban", "ban", "mute", "!mute"]
 say_unban = ["разбан", "разабанить", "!разбан", "размут", "!размут", "!unban", "unban", "unmute", "!unmute"]
+
 
 
 @bot.message_handler(commands=['qiwi'])
@@ -65,7 +66,7 @@ def start_message(message):
 @bot.message_handler(commands=['start'])
 def start_message(message):
     markup = types.ReplyKeyboardMarkup(True)
-    markup.row('📰', '💰', '📲', '🎲')
+    markup.row('🌻', '💰', '📲', '🎲')
     bot.send_message(message.chat.id, "Привет, " + message.chat.first_name + " 🧟‍♂️", reply_markup=markup)
 
     bot.send_message(message.chat.id, 'Вот готовые команды на текущий момент: \n'
@@ -162,6 +163,30 @@ def all_messages(message):
                 # все балансы
                 balances = balance(my_login, api_access_token)['accounts']
                 bot.send_message(message.chat.id, f"Ваш баланс: {balances[0]['balance']['amount']} ₽")
+            elif message.text == '🌻':
+                # Числа Фибоначчи
+                def get_fibonacci_number(message):  # получаем число
+                    global name;
+                    name = message.text;
+                    result_fibonacci = fibonacci(int(name))
+                    fib_number = list(result_fibonacci)[0]
+                    fib_number = str(fib_number)
+                    fib_number = fib_number.replace('[', '').replace(']', '')
+                    print(fib_number)
+                    fib_sequence = list(result_fibonacci)[1]
+                    fib_sequence = str(fib_sequence)
+                    fib_sequence = fib_sequence.replace('[', '').replace(']', '')
+                    print(fib_sequence)
+                    # Всё это безобразие переписать и добавить условие текст/число
+                    bot.send_message(message.chat.id, f"{name} - имеет следующую последовательность Фибоначчи: \n"
+                                                      f"{fib_number}\n"
+                                                      f"Золотым сечением данной последовательности является число: "
+                                                      f"{fib_sequence}")
+
+                bot.send_message(message.chat.id, "Введите число, чтобы получить последовельность чисел Фибоначчи"
+                                                  " и его золотое сечение 🙂")
+                bot.register_next_step_handler(message, get_fibonacci_number);  # следующий шаг – функция get_name
+
 
             else:
                 bot.send_message(message.chat.id, f"Вы написали: {message.text}")
