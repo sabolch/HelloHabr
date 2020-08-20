@@ -166,26 +166,48 @@ def all_messages(message):
             elif message.text == '🌻':
                 # Числа Фибоначчи
                 def get_fibonacci_number(message):  # получаем число
-                    global name;
-                    name = message.text;
-                    result_fibonacci = fibonacci(int(name))
-                    fib_number = list(result_fibonacci)[0]
-                    fib_number = str(fib_number)
-                    fib_number = fib_number.replace('[', '').replace(']', '')
-                    print(fib_number)
-                    fib_sequence = list(result_fibonacci)[1]
-                    fib_sequence = str(fib_sequence)
-                    fib_sequence = fib_sequence.replace('[', '').replace(']', '')
-                    print(fib_sequence)
-                    # Всё это безобразие переписать и добавить условие текст/число
-                    bot.send_message(message.chat.id, f"{name} - имеет следующую последовательность Фибоначчи: \n"
-                                                      f"{fib_number}\n"
-                                                      f"Золотым сечением данной последовательности является число: "
-                                                      f"{fib_sequence}")
+                    global number;
+                    number = message.text;
+                    if number.isdigit() == True:
+                        result_fibonacci = fibonacci(int(number))
+                        fib_number = list(result_fibonacci)[0]
+                        fib_number = str(fib_number)
+                        fib_number = fib_number.replace('[', '').replace(']', '')
+                        print(fib_number)
+                        fib_sequence = list(result_fibonacci)[1]
+                        fib_sequence = str(fib_sequence)
+                        fib_sequence = fib_sequence.replace('[', '').replace(']', '')
+                        print(fib_sequence)
+                        # Всё это безобразие переписать и добавить условие текст/число
+                        bot.send_message(message.chat.id, f"{number} - имеет следующую последовательность Фибоначчи: \n"
+                                                         f"{fib_number}\n"
+                                                        f"Золотым сечением данной последовательности является число: "
+                                                        f"{fib_sequence}")
 
+                        keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
+                        key_yes = types.InlineKeyboardButton(text='Да', callback_data='yes')  # кнопка «Да»
+                        keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
+                        key_no = types.InlineKeyboardButton(text='Нет', callback_data='no')
+                        keyboard.add(key_no)
+
+                        bot.send_message(message.from_user.id, text=f"Вам понравилось качество нашего обслуживания?",
+                                         reply_markup=keyboard)
+
+                    else:
+                        bot.send_message(message.chat.id, f"Введите число")
+                        bot.register_next_step_handler(message, get_fibonacci_number)
+                        # следующий шаг – функция get_name
+
+                @bot.callback_query_handler(func=lambda call: True)
+                def callback_worker(call):
+                    if call.data == "yes":  # call.data это callback_data, которую мы указали при объявлении кнопки
+                        bot.send_message(call.message.chat.id, 'Классно! : )')
+                    elif call.data == "no":
+                        bot.send_message(message.chat.id, f"Спасибо, Ваше мнение очень важно для нас!")
                 bot.send_message(message.chat.id, "Введите число, чтобы получить последовельность чисел Фибоначчи"
                                                   " и его золотое сечение 🙂")
-                bot.register_next_step_handler(message, get_fibonacci_number);  # следующий шаг – функция get_name
+                bot.register_next_step_handler(message, get_fibonacci_number)
+                # следующий шаг – функция get_name
 
 
             else:
@@ -228,4 +250,4 @@ def all_messages(message):
 
 # Запускаем бота, чтобы работал 24/7
 if __name__ == '__main__':
-    bot.polling(none_stop=True)
+    bot.polling(none_stop=True, timeout=123)
