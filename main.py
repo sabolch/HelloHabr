@@ -155,10 +155,51 @@ def all_messages(message):
             bot.send_message(user_id, f"Пользователь @{user_name} забанен.")
 
         else:
+            def pay_my_phone(message):
+
+                @bot.callback_query_handler(func=lambda call_pay: True)
+                def callback_worker(call_pay):
+                    if call_pay.data == "yep":  # call.data это callback_data, которую мы указали при объявлении кнопки
+                        bot.send_message(call_pay.message.chat.id, 'Сообщение об успешном пополнении! : )')
+                        bot.edit_message_reply_markup(call_pay.message.chat.id, call_pay.message.message_id)
+                        bot.delete_message(message.chat.id, message_id=msg_del)
+                    elif call_pay.data == "nope":
+                        bot.send_message(message.chat.id, f"Операция отменена")
+                        bot.edit_message_reply_markup(call_pay.message.chat.id, call_pay.message.message_id)
+                        bot.delete_message(message.chat.id, message_id=msg_del)
+                        pass
+
+                pay_sum = message.text
+                print(f"Ввод суммы [{pay_sum}]")
+
+                if message.text.isdigit():
+                    bal_sum = balance(my_login, api_access_token)['accounts']
+                    pay_balance = (str(bal_sum[0]['balance']['amount']))
+                    if int(pay_sum) <= int(bal_sum[0]['balance']['amount']):
+                        keyboard_mts = types.InlineKeyboardMarkup()  # наша клавиатура
+                        key_yes = types.InlineKeyboardButton(text='Подтвердить', callback_data='yep')  # кнопка «Да»
+                        keyboard_mts.add(key_yes)  # добавляем кнопку в клавиатуру
+                        key_no = types.InlineKeyboardButton(text='Отменить', callback_data='nope')
+                        keyboard_mts.add(key_no)
+
+                        bot.send_message(message.chat.id, f"На номер: +{my_login} \nбудет зачислена сумма: {pay_sum}₽",
+                                        reply_markup=keyboard_mts)
+                        global msg_del
+                        msg_del = message.message_id + 1
+                    else:
+                        bot.send_message(user_id, f"На вашем счёте недостаточно средств для проведения платежа. \n"
+                                                f"Баланс счёта: {pay_balance}₽")
+                        msg_del = message.message_id + 1
+                else:
+                    bot.send_message(message.chat.id, f"Введите сумму числом. Только цифры 🤷🏻‍♂️")
+                    bot.register_next_step_handler(message, pay_my_phone)
+
             if message.text == '📲' and message.chat.id == 441945234:
                 # Оплата мобильного телефона
-                send_mobile(api_access_token, '1', '9187289906', 'Оплата телефона с помощью бота', '1')
-                print(f"Во всяком случае мы попытались, {message.chat.first_name}")
+                bot.send_message(message.chat.id, f"Введите сумму")
+                # send_mobile(api_access_token, '1', '9187289906', 'Оплата телефона с помощью бота', '1')
+                bot.register_next_step_handler(message, pay_my_phone)
+
             elif message.text == '💰' and message.chat.id == 441945234:
                 # все балансы
                 balances = balance(my_login, api_access_token)['accounts']
@@ -166,9 +207,10 @@ def all_messages(message):
             elif message.text == '🌻':
                 # Числа Фибоначчи
                 def get_fibonacci_number(message):  # получаем число
-                    global number;
-                    number = message.text;
-                    if number.isdigit() == True:
+                    global number
+                    number = message.text
+
+                    if number.isdigit():
                         result_fibonacci = fibonacci(int(number))
                         fib_number = list(result_fibonacci)[0]
                         fib_number = str(fib_number)
@@ -204,12 +246,11 @@ def all_messages(message):
                         bot.send_message(call.message.chat.id, 'Классно! : )')
                     elif call.data == "no":
                         bot.send_message(message.chat.id, f"Спасибо, Ваше мнение очень важно для нас!")
+
                 bot.send_message(message.chat.id, "Введите число, чтобы получить последовельность чисел Фибоначчи"
                                                   " и его золотое сечение 🙂")
                 bot.register_next_step_handler(message, get_fibonacci_number)
                 # следующий шаг – функция get_name
-
-
             else:
                 bot.send_message(message.chat.id, f"Вы написали: {message.text}")
 
