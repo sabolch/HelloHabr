@@ -1,7 +1,14 @@
+import sqlite3
+import telebot
 import requests
 import difflib
 import time
+from telebot import types
+m_list = []
 
+from config import token, my_login, api_access_token
+# Создание бота
+bot = telebot.TeleBot(token)
 
 # История платежей - последние и следующие n платежей
 # Отправляем запрос в киви, получаем json-ответ
@@ -36,7 +43,7 @@ def balance(my_login, api_access_token):
     s.headers['Accept'] = 'application/json'
     s.headers['authorization'] = 'Bearer ' + api_access_token
     b = s.get('https://edge.qiwi.com/funding-sources/v2/persons/' + my_login + '/accounts')
-    return b.json()
+    return b.json()['accounts'][0]['balance']['amount']
 
 
 # Сравниваем две строки и получаем степень сходства от 0 до 1
@@ -60,6 +67,76 @@ def fibonacci(x):
     golden_ratio = sequence[-1] / sequence[-2]
 
     return sequence, golden_ratio
+
+
+# Проверка наличия у пользователя прав. Если его rules != True, то else
+def check_rules(id):
+    connection = sqlite3.connect("users.db")
+    cursor = connection.cursor()
+    sql = "SELECT rules FROM white_list WHERE id=?"
+    cursor.execute(sql, [id])
+    fetch_id = cursor.fetchone()
+    connection.commit()
+
+    if fetch_id is None:
+        fetch_id = 'False'
+
+    str_fetch_id = ''.join(fetch_id)
+    print(f"Проверка прав пользователя: {str_fetch_id}")
+    return str_fetch_id
+
+
+# Определяем значение от 0 до 1
+def t_say_ban(text, say_ban):
+    for i in range(len(say_ban)):
+        index_diff = similarity(text.split('@')[0].strip(), say_ban[i])
+        m_list.append(index_diff)
+    return max(m_list)
+
+
+# Определяем значение от 0 до 1
+def t_say_unban(text, say_unban):
+    for i in range(len(say_unban)):
+        index_diff = similarity(text.split('@')[0].strip(), say_unban[i])
+        m_list.append(index_diff)
+    return max(m_list)
+
+
+# Бан пользователя>
+def user_ban(text):
+    user_name = text.split('@')[1].strip()
+    connection = sqlite3.connect("users.db")
+    cursor = connection.cursor()
+
+    # Находим ублюдка по его username, меняем значение rules на False
+    sql = """
+          UPDATE white_list 
+          SET rules = 'False' 
+          WHERE user_name=?
+          """
+    cursor.execute(sql, [user_name])
+    fetch_id = cursor.fetchone()
+    connection.commit()
+    return user_name
+
+
+# Разбан пользователя
+def user_unban(text):
+    # Из "ban @sabolch" делаем "sabolch"
+    user_name = text.split('@')[1].strip()
+    connection = sqlite3.connect("users.db")
+    cursor = connection.cursor()
+
+    # Находим ублюдка по его username, меняем значение rules на True
+    sql = """
+          UPDATE white_list 
+          SET rules = 'True' 
+          WHERE user_name=?
+          """
+    cursor.execute(sql, [user_name])
+    fetch_id = cursor.fetchone()
+    connection.commit()
+    return user_name
 
 
 
