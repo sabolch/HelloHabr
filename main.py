@@ -105,7 +105,8 @@ def start_message(message):
 def all_messages(message):
     # Получаем сообщение пользователя
     print(f"Пользователь написал {message.text}")
-    bot.send_message(-1001166585345, f"!")
+    # Отправка в канал zireael
+    # bot.send_message(-1001166585345, f"!")
 
     # Получение статуса прав пользователя
     rules = check_rules(message.chat.id)
@@ -194,27 +195,29 @@ def all_messages(message):
                     bot.send_message(message.from_user.id, text=f"Вам понравилось качество нашего обслуживания?",
                                      reply_markup=keyboard)
 
+                    @bot.callback_query_handler(func=lambda call: True)
+                    def callback_worker(call):
+                        if call.data == "yes":  # call.data это callback_data, которую мы указали при объявлении кнопки
+                            bot.send_sticker(message.chat.id,
+                                             'CAACAgIAAxkBAAID0l9BbMxW6Q0_yRZ7ahHsU8CQO6c7AALHAAMWHfwLeXVXmujsd1AbBA')
+
+                            msg_id = message.message_id + 2
+                            bot.delete_message(message.chat.id, msg_id)
+
+                        elif call.data == "no":
+                            bot.send_sticker(message.chat.id,
+                                             'CAACAgIAAxkBAAID0F9BbHvp_tcecJxgEApxkT3ZEnIIAAKsAAM60N8BRmmum8GHZ5wbBA')
+
+                            msg_id = message.message_id + 2
+                            bot.delete_message(message.chat.id, msg_id)
+
                 else:
                     bot.send_message(message.chat.id, f"Введите число")
                     bot.register_next_step_handler(message, get_fibonacci_number)
 
                     # следующий шаг – функция get_name
 
-            @bot.callback_query_handler(func=lambda call: True)
-            def callback_worker(call):
-                if call.data == "yes":  # call.data это callback_data, которую мы указали при объявлении кнопки
-                    bot.send_sticker(message.chat.id,
-                                     'CAACAgIAAxkBAAID0l9BbMxW6Q0_yRZ7ahHsU8CQO6c7AALHAAMWHfwLeXVXmujsd1AbBA')
 
-                    msg_id = message.message_id + 4
-                    bot.delete_message(message.chat.id, msg_id)
-
-                elif call.data == "no":
-                    bot.send_sticker(message.chat.id,
-                                     'CAACAgIAAxkBAAID0F9BbHvp_tcecJxgEApxkT3ZEnIIAAKsAAM60N8BRmmum8GHZ5wbBA')
-
-                    msg_id = message.message_id + 4
-                    bot.delete_message(message.chat.id, msg_id)
 
             # Фибоначчи
 
